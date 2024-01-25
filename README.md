@@ -8,8 +8,8 @@ It takes into account factors such as: <br>
 -Visibility <br>
 <br>
 Due to DCS limitations:<br>
--It allows the CASE 2 when cloud coverage is less than 6/10.<br>
--It does not allow the execution of CASE 1, despite potential visibility above 5 miles, due to the lack of a method to determine visibility during precipitation.<br>
+-It allows the CASE 2 when cloud coverage is less than 6/10 but base is above 1000ft.<br>
+-During rain/snow does not allow CASE 1, despite potential visibility above 5 miles, due to the lack of a method to determine visibility during rain/snow.<br>
 
 # In game usage
 Select 'Other' from the comms menu, and then choose 'CRT - What CASE?'

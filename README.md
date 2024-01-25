@@ -11,6 +11,9 @@ Due to DCS limitations:<br>
 -It allows the CASE 2 when cloud coverage is less than 6/10.<br>
 -It does not allow the execution of CASE 1, despite potential visibility above 5 miles, due to the lack of a method to determine visibility during precipitation.<br>
 
+# In game usage
+Select 'Other' from the comms menu, and then choose 'CRT - What CASE?'
+
 # Installation
 ### Prerequisites
 [Only latest MOOSE](https://github.com/FlightControl-Master/MOOSE/releases)

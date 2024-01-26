@@ -54,7 +54,7 @@ For more customization see function `carrier_on()`.
 ## Due to DCS limitations:
 Due to limitations in DCS, specifically the lack of an effective method for dynamically determining visibility range:
 
--   For CASE 2, the rule is that if the cloud coverage is below 6/10 between cloud base altitudes above 1000FT and below 3000FT, CASE 2 is allowed.
+-   For CASE 1, the rule is that if the cloud coverage is below 4/10 between cloud base altitudes above 1000FT and below 3000FT, CASE 1 is allowed.
 -   In the presence of atmospheric precipitation, CASE 2 or 3 will always apply depending on the cloud base altitude.
 -   Dynamic weather is not supported, and in such cases, the script will only select CASE 3.
 

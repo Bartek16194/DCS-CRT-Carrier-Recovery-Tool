@@ -228,11 +228,11 @@ function weather_case_factor(show_info)
 				CASE = 1 -- BASE +3000FT
 			elseif base < 3000 and base > 1000 then
 				REASON = REASON.."-Clouds base below 3000ft but over 1000ft\n"
-				if clouddens > 6 then
-					REASON = REASON.."-Clouds density over 6/10\n"
+				if clouddens > 4 then
+					REASON = REASON.."-Clouds density over 4/10\n"
 					CASE = 2 -- CLOUDY
 				else
-					REASON = REASON.."-Clouds density below 6/10\n"
+					REASON = REASON.."-Clouds density below 4/10\n"
 					CASE = 1 -- NOT SO CLOUDY
 				end
 			else

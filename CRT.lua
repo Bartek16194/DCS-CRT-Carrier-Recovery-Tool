@@ -274,7 +274,7 @@ function carrier_on()
 	myAirboss:SetAirbossNiceGuy(carrier_SetAirbossNiceGuy)
 	myAirboss:SetStaticWeather(env.mission.weather.atmosphere_type)
 	myAirboss:SetSoundfilesFolder("Airboss Soundfiles/")
-	myAirboss:Start()
+	myAirboss:SetCollisionDistance(20) --NM
 	recovery_scheduler(myAirboss)
 end
 
@@ -282,26 +282,28 @@ function recovery_scheduler(carrier_instance)
 	local sunrise = tostring( UTILS.SecondsToClock(select(2, IsNight()), true) )
 	local sunset = tostring( UTILS.SecondsToClock(select(3, IsNight()), true) )
 	local current_time = tostring( UTILS.SecondsToClock(timer.getAbsTime(), true) )
+	local first_recovery = tostring( UTILS.SecondsToClock(timer.getAbsTime()+330, true) )
 	local sunrise_raw = select(2, IsNight())
 	local sunset_raw = select(3, IsNight())
 
 		if current_time > sunrise and current_time < sunset then --after sunrise but before sunset
-			carrier_instance:AddRecoveryWindow(current_time,sunset, weather_case_factor(false), nil, carrier_turnintowind)
+			carrier_instance:AddRecoveryWindow(first_recovery,sunset, weather_case_factor(false), nil, carrier_turnintowind)
 			carrier_instance:AddRecoveryWindow(sunset,sunrise.."+1", 3, math.random(#carrier_holdingoffset), carrier_turnintowind)
 			
 			timer.scheduleFunction(recovery_scheduler, carrier_instance, (days_passed()*86400)+sunrise_raw)
 		elseif current_time > sunrise and current_time > sunset then --after sunrise and sunset
-			carrier_instance:AddRecoveryWindow(current_time,sunrise.."+1", 3, math.random(#carrier_holdingoffset), carrier_turnintowind)
+			carrier_instance:AddRecoveryWindow(first_recovery,sunrise.."+1", 3, math.random(#carrier_holdingoffset), carrier_turnintowind)
 			carrier_instance:AddRecoveryWindow(sunrise.."+1",sunset.."+1", weather_case_factor(false), nil, carrier_turnintowind)
 			
 			timer.scheduleFunction(recovery_scheduler, carrier_instance, (days_passed()*86400)+sunset_raw)
 		else --before sunrise
-			carrier_instance:AddRecoveryWindow(current_time,sunrise, 3, math.random(#carrier_holdingoffset), carrier_turnintowind)
+			carrier_instance:AddRecoveryWindow(first_recovery,sunrise, 3, math.random(#carrier_holdingoffset), carrier_turnintowind)
 			carrier_instance:AddRecoveryWindow(sunrise,sunset, weather_case_factor(false), nil, carrier_turnintowind)
 			carrier_instance:AddRecoveryWindow(sunset,sunrise.."+1", 3, math.random(#carrier_holdingoffset), carrier_turnintowind)
 			
 			timer.scheduleFunction(recovery_scheduler, carrier_instance, (days_passed()*86400)+sunrise_raw)
 		end
+		carrier_instance:Start()
 end
 
 function days_passed()

@@ -219,7 +219,7 @@ function weather_case_factor(show_info)
 	
     local dynamic_weather = weather.atmosphere_type 
 	
-	if (select(1, IsNight()) == false and dynamic_weather == 0) or (IsNight()) == true and show_info == false) then	-- is DAY and not dynamic_weather
+	if (select(1, IsNight()) == false and dynamic_weather == 0) or (IsNight() == true and show_info == false) then	-- is DAY and not dynamic_weather
 		REASON = "\n-Not night\n-Disabled dynamic_weather\n"
 		if precepitation == 0 or (fog_visibility > 5 and fog_visibility ~=0 ) then --no RAIN/SNOW and no FOG
 			REASON = REASON.."-No rain/snow\n-No fog\n"

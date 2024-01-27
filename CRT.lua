@@ -297,34 +297,52 @@ function carrier_on()
 	carrier = NAVYGROUP:New(UNIT:FindByName(carrier_unit_name):GetGroup())
 	recovery_scheduler(myAirboss)
 end
+
+function randomMultiplier()
+	return math.random()
+end
+
+function calculateNewHeading(currentHeading)
+	local randomMultiplier = randomMultiplier()
+	currentHeading = currentHeading + (45 or -45 or 60 or -60 or 75 or -75 ) % 360 -- Zastosuj modulo 360 przed mnożeniem
+	local newHeading = currentHeading * randomMultiplier
+	newHeading = newHeading % 360 -- Zastosuj modulo 360 po mnożeniu
+
+	if newHeading>180 then
+		newHeading = newHeading - 180
+	else
+		newHeading = newHeading + 180
+	end
+	return newHeading
+end
+
+
 function detour()
-			--remove current waypoint to overwrite it by new detour destination
-			carrier:RemoveWaypointByID(carrier:GetWaypointIndexAfterID(carrier:GetWaypointCurrentUID()))
-			carrier:RemoveWaypointByID(carrier:GetWaypointCurrentUID())
-			
-			--get current heading and add some possible offset to it
-			heding3=UTILS.Randomize(carrier:GetHeading()+(90 or -90), math.random()*(timer.getTime() or timer.getAbsTime()), 30, 320)
-			MESSAGE:New(tostring("CRT - Carrier Coastline Collision possible - new heading - "..heding3), 300):ToAll()
-			
-			local kordki = GROUP:FindByName("Grupa CVN-71"):GetCoordinate()
-			--kordki:TextToAll("kordki", -1,{1,1,1}, 0.3,{1,1,1}, 0.5, 20, true) 
-			
-			local translat= kordki:Translate( UTILS.NMToMeters( 25 ), heding3)
-			--translat
-			carrier_detour_arrow = translat:GetCoordinate():TextToAll("Carrier detour destination", -1,{0,0,1}, 0.3,{0,0,1}, 0.5, 20, true)
-			
-			local veki= translat:GetVec2()
-			
-			local strefa = ZONE_RADIUS:New(tostring(timer.getAbsTime()), veki, 100, false)
-			--strefa:TextToAll("strefa", -1,{1,1,1}, 0.3,{1,1,1}, 0.5, 20, true) 
-
-			carrier:AddWaypoint(strefa:GetCoordinate(), 100, nil, nil, true)
+	--remove current waypoint to overwrite it by new detour destination
+	carrier:RemoveWaypointByID(carrier:GetWaypointIndexAfterID(carrier:GetWaypointCurrentUID()))
+	carrier:RemoveWaypointByID(carrier:GetWaypointCurrentUID())
+	
+	--get current heading and add some possible offset to it
+	--heding3=UTILS.Randomize(carrier:GetHeading()+(90 or -90), math.random()*(timer.getTime() or timer.getAbsTime()), 30, 320)
+	
+	local heding3=calculateNewHeading(carrier:GetHeading())
+	MESSAGE:New(tostring("CRT - New heading - "..heding3), 300):ToAll()
 
 
-			--carrier:RemoveWaypointByID(1)
-			carrier:MarkWaypoints(86400)
-			carrier:SetPatrolAdInfinitum(false)
-			carrier:Cruise(100)
+	--new position calculation
+	local current_position = GROUP:FindByName("Grupa CVN-71"):GetCoordinate()
+	
+	local current_position_altered= current_position:Translate( UTILS.NMToMeters( 25 ), heding3)
+	
+	local new_destination = ZONE_RADIUS:New(tostring(timer.getAbsTime()), current_position_altered:GetVec2(), 100, false)
+
+	carrier:AddWaypoint(new_destination:GetCoordinate(), 100, nil, nil, true)
+	carrier_detour_arrow = current_position_altered:GetCoordinate():TextToAll("Carrier detour destination", -1,{1,0,0}, 0.6,{1,1,1}, 0.3, 20, true)
+
+	--carrier:RemoveWaypointByID(1)
+	carrier:MarkWaypoints(86400)
+	carrier:SetPatrolAdInfinitum(false)
+	carrier:Cruise(100)
 end
 
 local detour_ongoing
@@ -362,7 +380,8 @@ function recovery_scheduler(carrier_instance)
 		carrier_detour_arrow = nil
 	end
 		
-	MESSAGE:New(tostring("Resuming Recovery"), 300):ToAll()
+	MESSAGE:New(tostring("CRT - Resuming Recovery"), 300):ToAll()
+	
 	function carrier:OnAfterCollisionWarning(From, Event, To)
 		myAirboss:DeleteAllRecoveryWindows(2)
 		timer.scheduleFunction(detour, nil, timer.getTime()+5)
@@ -371,7 +390,7 @@ function recovery_scheduler(carrier_instance)
 			carrier_detour_arrow = nil
 		end
 		if detour_ongoing == false then
-			MESSAGE:New(tostring("recovery_scheduler in "..(60*60).."s"), 300):ToAll()
+			MESSAGE:New(tostring("CRT - Carrier Coastline Collision possible\nScheduling next recovery in "..UTILS.SecondsToClock(60*60, true)), 300):ToAll()
 			timer.scheduleFunction(recovery_scheduler, myAirboss, timer.getTime()+(60*60))
 			detour_ongoing = true
 		end

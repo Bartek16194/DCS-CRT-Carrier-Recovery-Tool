@@ -30,9 +30,20 @@
 	If you need support or if you like to contribute, jump into my [Discord](https://discord.gg/yYs9HSq).
 
 	See https://github.com/Bartek16194/DCS-CRT-Carrier-Recovery-Tool for a user manual and the latest release.
+	
+	Changelog: 
+	1.0
+	-Initial Release only with CASE selector
+	
+	2.0
+	-Moose Airboss Integration 
+	
+	2.1
+	-Coastline detection and aviodance
+	
 ]]
 
---VERSION: 2.0
+--VERSION: 2.1
 
 ----[[ ##### SCRIPT CONFIGURATION ##### ]]----
 
@@ -44,7 +55,7 @@ carrier_morse_code = "ROS"
 carrier_tacan = 1
 carrier_tacan_mode = "X"
 carrier_icls = 1
-carrier_SetPatrolAdInfinitum = true
+carrier_SetPatrolAdInfinitum = false
 carrier_SetMenuSmokeZones = false
 carrier_SetMenuMarkZones = false
 carrier_SetMarshalRadio = 127.500
@@ -57,6 +68,9 @@ carrier_holdingoffset = {-30,-15,0,15,30} --only in CASE 3
 carrier_turnintowind = true
 
 ----[[ ##### End of SCRIPT CONFIGURATION ##### ]]----
+
+carrier_detour_arrow = nil
+
 
 function IsNight()
 	local zero_point = COORDINATE:NewFromVec2({0,0})
@@ -204,6 +218,11 @@ return precepitation,clouddens
 
 end 
 
+function days_passed()
+local day = math.floor(timer.getAbsTime() / 86400) +1
+return day
+end
+
 function weather_case_factor(show_info)
     local weather = env.mission.weather
     --local visibility = UTILS.Round(weather.visibility.distance / 1852,2) --NM //broken
@@ -262,10 +281,10 @@ function weather_case_factor(show_info)
 end
 
 function carrier_on()
-	local myAirboss=AIRBOSS:New(carrier_unit_name, carrier_airboss_name)
+	myAirboss=AIRBOSS:New(carrier_unit_name, carrier_airboss_name)
 	myAirboss:SetTACAN(carrier_tacan, carrier_tacan_mode, carrier_morse_code)
 	myAirboss:SetICLS(carrier_icls, carrier_morse_code)
-	myAirboss:SetPatrolAdInfinitum(carrier_SetPatrolAdInfinitum)
+	--myAirboss:SetPatrolAdInfinitum(carrier_SetPatrolAdInfinitum)
 	myAirboss:SetMenuSmokeZones(carrier_SetMenuSmokeZones)
 	myAirboss:SetMenuMarkZones(carrier_SetMenuMarkZones)
 	myAirboss:SetMarshalRadio(carrier_SetMarshalRadio)
@@ -274,9 +293,40 @@ function carrier_on()
 	myAirboss:SetAirbossNiceGuy(carrier_SetAirbossNiceGuy)
 	myAirboss:SetStaticWeather(env.mission.weather.atmosphere_type)
 	myAirboss:SetSoundfilesFolder("Airboss Soundfiles/")
-	myAirboss:SetCollisionDistance(20) --NM
+	myAirboss:Start()
 	recovery_scheduler(myAirboss)
 end
+function detour()
+			--remove current waypoint to overwrite it by new detour destination
+			carrier:RemoveWaypointByID(carrier:GetWaypointIndexAfterID(carrier:GetWaypointCurrentUID()))
+			carrier:RemoveWaypointByID(carrier:GetWaypointCurrentUID())
+			
+			--get current heading and add some possible offset to it
+			heding3=UTILS.Randomize(carrier:GetHeading()+(90 or -90), math.random()*(timer.getTime() or timer.getAbsTime()), 30, 320)
+			MESSAGE:New(tostring("CRT - Carrier Coastline Collision possible - new heading - "..heding3), 300):ToAll()
+			
+			local kordki = GROUP:FindByName("Grupa CVN-71"):GetCoordinate()
+			--kordki:TextToAll("kordki", -1,{1,1,1}, 0.3,{1,1,1}, 0.5, 20, true) 
+			
+			local translat= kordki:Translate( UTILS.NMToMeters( 25 ), heding3)
+			--translat:GetCoordinate():TextToAll("translat", -1,{1,1,1}, 0.3,{1,1,1}, 0.5, 20, true)
+			carrier_detour_arrow = kordki:ArrowToAll(translat:GetCoordinate(), -1, {0,0,1}, 0.3, {1,0,0}, 0.5, 1, true, "Carrier detour route")
+			
+			local veki= translat:GetVec2()
+			
+			local strefa = ZONE_RADIUS:New(tostring(timer.getAbsTime()), veki, 100, false)
+			--strefa:TextToAll("strefa", -1,{1,1,1}, 0.3,{1,1,1}, 0.5, 20, true) 
+
+			carrier:AddWaypoint(strefa:GetCoordinate(), 100, nil, nil, true)
+
+
+			--carrier:RemoveWaypointByID(1)
+			carrier:MarkWaypoints(86400)
+			carrier:SetPatrolAdInfinitum(false)
+			carrier:Cruise(100)
+end
+
+local detour_ongoing
 
 function recovery_scheduler(carrier_instance)
 	local sunrise = tostring( UTILS.SecondsToClock(select(2, IsNight()), true) )
@@ -286,34 +336,47 @@ function recovery_scheduler(carrier_instance)
 	local sunrise_raw = select(2, IsNight())
 	local sunset_raw = select(3, IsNight())
 
-		if current_time > sunrise and current_time < sunset then --after sunrise but before sunset
-			carrier_instance:AddRecoveryWindow(first_recovery,sunset, weather_case_factor(false), nil, carrier_turnintowind)
-			carrier_instance:AddRecoveryWindow(sunset,sunrise.."+1", 3, math.random(#carrier_holdingoffset), carrier_turnintowind)
+	if current_time > sunrise and current_time < sunset then --after sunrise but before sunset
+		carrier_instance:AddRecoveryWindow(first_recovery,sunset, weather_case_factor(false), nil, carrier_turnintowind,25,true)
+		carrier_instance:AddRecoveryWindow(sunset,sunrise.."+1", 3, math.random(#carrier_holdingoffset), carrier_turnintowind,25,true)
 			
-			timer.scheduleFunction(recovery_scheduler, carrier_instance, (days_passed()*86400)+sunrise_raw)
-		elseif current_time > sunrise and current_time > sunset then --after sunrise and sunset
-			carrier_instance:AddRecoveryWindow(first_recovery,sunrise.."+1", 3, math.random(#carrier_holdingoffset), carrier_turnintowind)
-			carrier_instance:AddRecoveryWindow(sunrise.."+1",sunset.."+1", weather_case_factor(false), nil, carrier_turnintowind)
+		timer.scheduleFunction(recovery_scheduler, carrier_instance, (days_passed()*86400)+sunrise_raw)
+	elseif current_time > sunrise and current_time > sunset then --after sunrise and sunset
+		carrier_instance:AddRecoveryWindow(first_recovery,sunrise.."+1", 3, math.random(#carrier_holdingoffset), carrier_turnintowind,25,true)
+		carrier_instance:AddRecoveryWindow(sunrise.."+1",sunset.."+1", weather_case_factor(false), nil, carrier_turnintowind,25,true)
 			
-			timer.scheduleFunction(recovery_scheduler, carrier_instance, (days_passed()*86400)+sunset_raw)
-		else --before sunrise
-			carrier_instance:AddRecoveryWindow(first_recovery,sunrise, 3, math.random(#carrier_holdingoffset), carrier_turnintowind)
-			carrier_instance:AddRecoveryWindow(sunrise,sunset, weather_case_factor(false), nil, carrier_turnintowind)
-			carrier_instance:AddRecoveryWindow(sunset,sunrise.."+1", 3, math.random(#carrier_holdingoffset), carrier_turnintowind)
+		timer.scheduleFunction(recovery_scheduler, carrier_instance, (days_passed()*86400)+sunset_raw)
+	else --before sunrise
+		carrier_instance:AddRecoveryWindow(first_recovery,sunrise, 3, math.random(#carrier_holdingoffset), carrier_turnintowind,25,true)
+		carrier_instance:AddRecoveryWindow(sunrise,sunset, weather_case_factor(false), nil, carrier_turnintowind,25,true)
+		carrier_instance:AddRecoveryWindow(sunset,sunrise.."+1", 3, math.random(#carrier_holdingoffset), carrier_turnintowind,25,true)
 			
-			timer.scheduleFunction(recovery_scheduler, carrier_instance, (days_passed()*86400)+sunrise_raw)
+		timer.scheduleFunction(recovery_scheduler, carrier_instance, (days_passed()*86400)+sunrise_raw)
+	end
+		
+	detour_ongoing = false
+		
+	MESSAGE:New(tostring("Resuming Recovery"), 300):ToAll()
+	function carrier:OnAfterCollisionWarning(From, Event, To)
+		myAirboss:DeleteAllRecoveryWindows(2)
+		timer.scheduleFunction(detour, nil, timer.getTime()+5)
+		if detour_ongoing == false then
+			MESSAGE:New(tostring("recovery_scheduler in "..(60*60).."s"), 300):ToAll()
+			timer.scheduleFunction(recovery_scheduler, myAirboss, timer.getTime()+(60*60))
+			detour_ongoing = true
 		end
-		carrier_instance:Start()
+	end	
 end
 
-function days_passed()
-local day = math.floor(timer.getAbsTime() / 86400) +1
-return day
+function nawigrup()
+carrier = NAVYGROUP:New(UNIT:FindByName("Grupa CVN-71"):GetGroup())
+carrier:MarkWaypoints(86400)
 end
 
 if carrier_MOOSE_airboss == true then
 	timer.scheduleFunction(carrier_on, nil, timer.getTime() + 1)
 	weather_case_factor(true)
+	nawigrup()
 	MESSAGE:New("Carrier Recovery Tool - Managing carrier: "..carrier_unit_name.."\n if config is correct you should get new radio item in 'Others'", 30):ToAll()
 else
 	weather_case_factor(true)

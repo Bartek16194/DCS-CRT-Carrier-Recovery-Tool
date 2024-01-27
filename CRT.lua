@@ -273,8 +273,8 @@ function weather_case_factor(show_info)
 	end
 	
 	if show_info == true then
-	MESSAGE:New(tostring("CASE: " .. CASE), 10):ToAll()
-	MESSAGE:New(tostring("REASON: " .. REASON), 10):ToAll()
+	MESSAGE:New(tostring("CRT - CASE: " .. CASE), 10):ToAll()
+	MESSAGE:New(tostring("CRT - REASON: " .. REASON), 10):ToAll()
 	end
 	
 	return CASE
@@ -323,8 +323,6 @@ function detour()
 	carrier:RemoveWaypointByID(carrier:GetWaypointCurrentUID())
 	
 	--get current heading and add some possible offset to it
-	--heding3=UTILS.Randomize(carrier:GetHeading()+(90 or -90), math.random()*(timer.getTime() or timer.getAbsTime()), 30, 320)
-	
 	local heding3=calculateNewHeading(carrier:GetHeading())
 	MESSAGE:New(tostring("CRT - New heading - "..heding3), 300):ToAll()
 
@@ -346,6 +344,7 @@ function detour()
 end
 
 local detour_ongoing
+local recovery_scheduler_function
 
 function recovery_scheduler(carrier_instance)
 	local sunrise = tostring( UTILS.SecondsToClock(select(2, IsNight()), true) )
@@ -384,16 +383,22 @@ function recovery_scheduler(carrier_instance)
 	
 	function carrier:OnAfterCollisionWarning(From, Event, To)
 		myAirboss:DeleteAllRecoveryWindows(2)
-		timer.scheduleFunction(detour, nil, timer.getTime()+5)
+		
+		timer.scheduleFunction(detour, nil, timer.getTime()+2)
+		
 		if carrier_detour_arrow ~= nil then
 			trigger.action.removeMark(carrier_detour_arrow)
 			carrier_detour_arrow = nil
 		end
-		if detour_ongoing == false then
-			MESSAGE:New(tostring("CRT - Carrier Coastline Collision possible\nScheduling next recovery in "..UTILS.SecondsToClock(60*60, true)), 300):ToAll()
-			timer.scheduleFunction(recovery_scheduler, myAirboss, timer.getTime()+(60*60))
-			detour_ongoing = true
+		
+		if detour_ongoing == true then
+			timer.removeFunction(recovery_scheduler_function)
+		else
+		MESSAGE:New(tostring("CRT - Carrier Coastline Collision possible\nScheduling next recovery in "..UTILS.SecondsToClock(60*60, true)), 300):ToAll()
 		end
+		
+		recovery_scheduler_function = timer.scheduleFunction(recovery_scheduler, myAirboss, timer.getTime()+(60*60))
+		detour_ongoing = true
 	end	
 end
 

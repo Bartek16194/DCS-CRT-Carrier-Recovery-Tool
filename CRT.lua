@@ -294,6 +294,7 @@ function carrier_on()
 	myAirboss:SetStaticWeather(env.mission.weather.atmosphere_type)
 	myAirboss:SetSoundfilesFolder("Airboss Soundfiles/")
 	myAirboss:Start()
+	carrier = NAVYGROUP:New(UNIT:FindByName(carrier_unit_name):GetGroup())
 	recovery_scheduler(myAirboss)
 end
 function detour()
@@ -309,8 +310,8 @@ function detour()
 			--kordki:TextToAll("kordki", -1,{1,1,1}, 0.3,{1,1,1}, 0.5, 20, true) 
 			
 			local translat= kordki:Translate( UTILS.NMToMeters( 25 ), heding3)
-			--translat:GetCoordinate():TextToAll("translat", -1,{1,1,1}, 0.3,{1,1,1}, 0.5, 20, true)
-			carrier_detour_arrow = kordki:ArrowToAll(translat:GetCoordinate(), -1, {0,0,1}, 0.3, {1,0,0}, 0.5, 1, true, "Carrier detour route")
+			--translat
+			carrier_detour_arrow = translat:GetCoordinate():TextToAll("Carrier detour destination", -1,{0,0,1}, 0.3,{0,0,1}, 0.5, 20, true)
 			
 			local veki= translat:GetVec2()
 			
@@ -355,11 +356,20 @@ function recovery_scheduler(carrier_instance)
 	end
 		
 	detour_ongoing = false
+	
+	if carrier_detour_arrow ~= nil then
+		trigger.action.removeMark(carrier_detour_arrow)
+		carrier_detour_arrow = nil
+	end
 		
 	MESSAGE:New(tostring("Resuming Recovery"), 300):ToAll()
 	function carrier:OnAfterCollisionWarning(From, Event, To)
 		myAirboss:DeleteAllRecoveryWindows(2)
 		timer.scheduleFunction(detour, nil, timer.getTime()+5)
+		if carrier_detour_arrow ~= nil then
+			trigger.action.removeMark(carrier_detour_arrow)
+			carrier_detour_arrow = nil
+		end
 		if detour_ongoing == false then
 			MESSAGE:New(tostring("recovery_scheduler in "..(60*60).."s"), 300):ToAll()
 			timer.scheduleFunction(recovery_scheduler, myAirboss, timer.getTime()+(60*60))
@@ -368,15 +378,9 @@ function recovery_scheduler(carrier_instance)
 	end	
 end
 
-function nawigrup()
-carrier = NAVYGROUP:New(UNIT:FindByName("Grupa CVN-71"):GetGroup())
-carrier:MarkWaypoints(86400)
-end
-
 if carrier_MOOSE_airboss == true then
 	timer.scheduleFunction(carrier_on, nil, timer.getTime() + 1)
 	weather_case_factor(true)
-	nawigrup()
 	MESSAGE:New("Carrier Recovery Tool - Managing carrier: "..carrier_unit_name.."\n if config is correct you should get new radio item in 'Others'", 30):ToAll()
 else
 	weather_case_factor(true)

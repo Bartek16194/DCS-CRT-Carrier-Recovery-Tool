@@ -74,8 +74,8 @@ carrier_detour_arrow = nil
 
 function IsNight()
 	local zero_point = COORDINATE:NewFromVec2({0,0})
-	local sunset = zero_point:GetSunset(true)+1800
-	local sunrise = zero_point:GetSunrise(true)-1800
+	local sunset = zero_point:GetSunset(true)-1800
+	local sunrise = zero_point:GetSunrise(true)+1800
 	local night 
 	
 	if (timer.getAbsTime() > sunset) or (timer.getAbsTime() < sunrise) then --NOC 
@@ -318,7 +318,7 @@ end]]
 
 function calculateNewHeading(currentHeading)
 	local heading_offsets = {15,25,30,40,45,50,55,60,70,-15,-25,-30,-40,-45,-50,-55,-60,-70}
-	local newHeading = currentHeading - 180 + math.random(#heading_offsets)
+	local newHeading = currentHeading - 180 + math.random(1,#heading_offsets)
 
 	if currentHeading < 0 then
 		newHeading = 360 - newHeading
@@ -367,18 +367,18 @@ function recovery_scheduler(carrier_instance)
 
 	if current_time > sunrise and current_time < sunset then --after sunrise but before sunset
 		carrier_instance:AddRecoveryWindow(first_recovery,sunset, weather_case_factor(false), nil, carrier_turnintowind,25,true)
-		carrier_instance:AddRecoveryWindow(sunset,sunrise.."+1", 3, math.random(#carrier_holdingoffset), carrier_turnintowind,25,true)
+		carrier_instance:AddRecoveryWindow(tostring(UTILS.SecondsToClock(sunset_raw+330, true)),sunrise.."+1", 3, math.random(1,#carrier_holdingoffset), carrier_turnintowind,25,true)
 			
 		timer.scheduleFunction(recovery_scheduler, carrier_instance, (days_passed()*86400)+sunrise_raw)
 	elseif current_time > sunrise and current_time > sunset then --after sunrise and sunset
-		carrier_instance:AddRecoveryWindow(first_recovery,sunrise.."+1", 3, math.random(#carrier_holdingoffset), carrier_turnintowind,25,true)
-		carrier_instance:AddRecoveryWindow(sunrise.."+1",sunset.."+1", weather_case_factor(false), nil, carrier_turnintowind,25,true)
+		carrier_instance:AddRecoveryWindow(first_recovery,sunrise.."+1", 3, math.random(1,#carrier_holdingoffset), carrier_turnintowind,25,true)
+		carrier_instance:AddRecoveryWindow(tostring(UTILS.SecondsToClock(sunrise_raw+330, true)).."+1",sunset.."+1", weather_case_factor(false), nil, carrier_turnintowind,25,true)
 			
 		timer.scheduleFunction(recovery_scheduler, carrier_instance, (days_passed()*86400)+sunset_raw)
 	else --before sunrise
-		carrier_instance:AddRecoveryWindow(first_recovery,sunrise, 3, math.random(#carrier_holdingoffset), carrier_turnintowind,25,true)
-		carrier_instance:AddRecoveryWindow(sunrise,sunset, weather_case_factor(false), nil, carrier_turnintowind,25,true)
-		carrier_instance:AddRecoveryWindow(sunset,sunrise.."+1", 3, math.random(#carrier_holdingoffset), carrier_turnintowind,25,true)
+		carrier_instance:AddRecoveryWindow(first_recovery,sunrise, 3, math.random(1,#carrier_holdingoffset), carrier_turnintowind,25,true)
+		carrier_instance:AddRecoveryWindow(tostring(UTILS.SecondsToClock(sunrise_raw+330, true)),sunset, weather_case_factor(false), nil, carrier_turnintowind,25,true)
+		carrier_instance:AddRecoveryWindow(tostring(UTILS.SecondsToClock(sunset_raw+330, true)),sunrise.."+1", 3, math.random(1,#carrier_holdingoffset), carrier_turnintowind,25,true)
 			
 		timer.scheduleFunction(recovery_scheduler, carrier_instance, (days_passed()*86400)+sunrise_raw)
 	end  --dodać przerwy między oknami 5 min

@@ -313,12 +313,12 @@ end]]
 
 function calculateNewHeading(currentHeading)
 	local heading_offsets = {15,25,30,40,45,50,55,60,70,-15,-25,-30,-40,-45,-50,-55,-60,-70}
-	local newHeading = currentHeading - 180 + math.random(1,#heading_offsets)
+	local newHeading
 
-	if currentHeading < 0 then
-		newHeading = 360 - newHeading
+	if currentHeading > 180 then
+		newHeading = 360 - (currentHeading+ heading_offsets[math.random(1,#heading_offsets)])
 	else
-		newHeading = newHeading
+		newHeading = currentHeading + (currentHeading+ heading_offsets[math.random(1,#heading_offsets)])
 	end
 	return newHeading
 end
@@ -350,32 +350,36 @@ function detour()
 end
 
 local detour_ongoing
-local recovery_scheduler_function
+local recovery_function_schedule = nil
 
 function recovery_scheduler(carrier_instance)
 	local sunrise = tostring( UTILS.SecondsToClock(select(2, IsNight()), true) )
 	local sunset = tostring( UTILS.SecondsToClock(select(3, IsNight()), true) )
 	local current_time = tostring( UTILS.SecondsToClock(timer.getAbsTime(), true) )
 	local first_recovery = tostring( UTILS.SecondsToClock(timer.getAbsTime()+330, true) )
-	local sunrise_raw = select(2, IsNight())
-	local sunset_raw = select(3, IsNight())
+	local days
+	if recovery_function_schedule ~= nil then
+	timer.removeFunction(recovery_function_schedule) 
+	recovery_function_schedule = nil
+	end
+	days = math.floor(timer.getAbsTime() / 86400)
 
 	if current_time > sunrise and current_time < sunset then --after sunrise but before sunset
-		carrier_instance:AddRecoveryWindow(first_recovery,sunset, weather_case_factor(false), nil, carrier_turnintowind,25,true)
-		carrier_instance:AddRecoveryWindow(tostring(UTILS.SecondsToClock(sunset_raw+330, true)),sunrise.."+1", 3, math.random(1,#carrier_holdingoffset), carrier_turnintowind,25,true)
+		carrier_instance:AddRecoveryWindow(tostring(UTILS.SecondsToClock(  timer.getAbsTime()+330, true).."+"..days+0),tostring( UTILS.SecondsToClock(select(3, IsNight()), true).."+"..days+0), weather_case_factor(false), nil, carrier_turnintowind,25,true)
+		carrier_instance:AddRecoveryWindow(tostring(UTILS.SecondsToClock(select(3, IsNight())+330, true).."+"..days+0),tostring( UTILS.SecondsToClock(select(2, IsNight()), true).."+"..days+1), 3, math.random(1,#carrier_holdingoffset), carrier_turnintowind,25,true)
 		
-		timer.scheduleFunction(recovery_scheduler, carrier_instance,(timer.getTime()+(86400-timer.getAbsTime())+sunrise_raw) )		
+		recovery_function_schedule = timer.scheduleFunction(recovery_scheduler, carrier_instance,(timer.getTime()+(86400-timer.getAbsTime())+select(2, IsNight())) )		
 	elseif current_time > sunrise and current_time > sunset then --after sunrise and sunset
-		carrier_instance:AddRecoveryWindow(first_recovery,sunrise.."+1", 3, math.random(1,#carrier_holdingoffset), carrier_turnintowind,25,true)
-		carrier_instance:AddRecoveryWindow(tostring(UTILS.SecondsToClock(sunrise_raw+330, true)).."+1",sunset.."+1", weather_case_factor(false), nil, carrier_turnintowind,25,true)
+		carrier_instance:AddRecoveryWindow(tostring(UTILS.SecondsToClock(  timer.getAbsTime()+330, true).."+"..days+0),tostring( UTILS.SecondsToClock(select(2, IsNight()), true).."+"..days+1), 3, math.random(1,#carrier_holdingoffset), carrier_turnintowind,25,true)
+		carrier_instance:AddRecoveryWindow(tostring(UTILS.SecondsToClock(select(2, IsNight())+330, true).."+"..days+1),tostring( UTILS.SecondsToClock(select(3, IsNight()), true).."+"..days+1), weather_case_factor(false), nil, carrier_turnintowind,25,true)
 		
-		timer.scheduleFunction(recovery_scheduler, carrier_instance,(timer.getTime()+(86400-timer.getAbsTime())+sunset_raw) )
+		recovery_function_schedule = timer.scheduleFunction(recovery_scheduler, carrier_instance,(timer.getTime()+(86400-timer.getAbsTime())+select(3, IsNight())) )
 	else --before sunrise
-		carrier_instance:AddRecoveryWindow(first_recovery,sunrise, 3, math.random(1,#carrier_holdingoffset), carrier_turnintowind,25,true)
-		carrier_instance:AddRecoveryWindow(tostring(UTILS.SecondsToClock(sunrise_raw+330, true)),sunset, weather_case_factor(false), nil, carrier_turnintowind,25,true)
-		carrier_instance:AddRecoveryWindow(tostring(UTILS.SecondsToClock(sunset_raw+330, true)),sunrise.."+1", 3, math.random(1,#carrier_holdingoffset), carrier_turnintowind,25,true)
+		carrier_instance:AddRecoveryWindow(tostring(UTILS.SecondsToClock(  timer.getAbsTime()+330, true).."+"..days+0),tostring( UTILS.SecondsToClock(select(2, IsNight()), true).."+"..days+0), 3, math.random(1,#carrier_holdingoffset), carrier_turnintowind,25,true)
+		carrier_instance:AddRecoveryWindow(tostring(UTILS.SecondsToClock(select(2, IsNight())+330, true).."+"..days+0),tostring( UTILS.SecondsToClock(select(3, IsNight()), true).."+"..days+0), weather_case_factor(false), nil, carrier_turnintowind,25,true)
+		carrier_instance:AddRecoveryWindow(tostring(UTILS.SecondsToClock(select(3, IsNight())+330, true).."+"..days+0),tostring( UTILS.SecondsToClock(select(2, IsNight()), true).."+"..days+1), 3, math.random(1,#carrier_holdingoffset), carrier_turnintowind,25,true)
 			
-		timer.scheduleFunction(recovery_scheduler, carrier_instance,(timer.getTime()+(86400-timer.getAbsTime())+sunrise_raw) )
+		recovery_function_schedule = timer.scheduleFunction(recovery_scheduler, carrier_instance,(timer.getTime()+(86400-timer.getAbsTime())+select(2, IsNight())) )
 	end  
 		
 	detour_ongoing = false
@@ -388,22 +392,29 @@ function recovery_scheduler(carrier_instance)
 	MESSAGE:New(tostring("CRT - Resuming Recovery"), 300):ToAll()
 	
 	function carrier:OnAfterCollisionWarning(From, Event, To)
-		myAirboss:DeleteAllRecoveryWindows(2)
-		
-		timer.scheduleFunction(detour, nil, timer.getTime()+5)
-		
+		--remove detour mark from previous if another collision detected
 		if carrier_detour_arrow ~= nil then
 			trigger.action.removeMark(carrier_detour_arrow)
 			carrier_detour_arrow = nil
 		end
+	
+		--delete all recoveries ongoing
+		myAirboss:DeleteAllRecoveryWindows(2)
+		--disable timer for recovery_scheduler
+		if recovery_function_schedule ~= nil then
+			timer.removeFunction(recovery_function_schedule) 
+			recovery_function_schedule = nil
+		end
+		--plan new route
+		timer.scheduleFunction(detour, nil, timer.getTime()+5)	
+		--new scheduler to fire up after detour
+		recovery_function_schedule = timer.scheduleFunction(recovery_scheduler, myAirboss, timer.getTime()+(60*60))
 		
-		if detour_ongoing == true then
-			timer.removeFunction(recovery_scheduler_function)
-		else
-		MESSAGE:New(tostring("CRT - Carrier Coastline Collision possible\nScheduling next recovery in "..UTILS.SecondsToClock(60*60, true)), 300):ToAll()
+		if detour_ongoing == false then
+			MESSAGE:New(tostring("CRT - Carrier Coastline Collision possible\nScheduling next recovery in "..UTILS.SecondsToClock(60*60, true)), 300):ToAll()
 		end
 		
-		recovery_scheduler_function = timer.scheduleFunction(recovery_scheduler, myAirboss, timer.getTime()+(60*60))
+		
 		detour_ongoing = true
 	end	
 end

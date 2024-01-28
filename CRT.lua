@@ -218,11 +218,6 @@ return precepitation,clouddens
 
 end 
 
-function days_passed()
-local day = math.floor(timer.getAbsTime() / 86400) +1
-return day
-end
-
 function weather_case_factor(show_info)
     local weather = env.mission.weather
     --local visibility = UTILS.Round(weather.visibility.distance / 1852,2) --NM //broken
@@ -368,20 +363,20 @@ function recovery_scheduler(carrier_instance)
 	if current_time > sunrise and current_time < sunset then --after sunrise but before sunset
 		carrier_instance:AddRecoveryWindow(first_recovery,sunset, weather_case_factor(false), nil, carrier_turnintowind,25,true)
 		carrier_instance:AddRecoveryWindow(tostring(UTILS.SecondsToClock(sunset_raw+330, true)),sunrise.."+1", 3, math.random(1,#carrier_holdingoffset), carrier_turnintowind,25,true)
-			
-		timer.scheduleFunction(recovery_scheduler, carrier_instance, (days_passed()*86400)+sunrise_raw)
+		
+		timer.scheduleFunction(recovery_scheduler, carrier_instance,(timer.getTime()+(86400-timer.getAbsTime())+sunrise_raw) )		
 	elseif current_time > sunrise and current_time > sunset then --after sunrise and sunset
 		carrier_instance:AddRecoveryWindow(first_recovery,sunrise.."+1", 3, math.random(1,#carrier_holdingoffset), carrier_turnintowind,25,true)
 		carrier_instance:AddRecoveryWindow(tostring(UTILS.SecondsToClock(sunrise_raw+330, true)).."+1",sunset.."+1", weather_case_factor(false), nil, carrier_turnintowind,25,true)
-			
-		timer.scheduleFunction(recovery_scheduler, carrier_instance, (days_passed()*86400)+sunset_raw)
+		
+		timer.scheduleFunction(recovery_scheduler, carrier_instance,(timer.getTime()+(86400-timer.getAbsTime())+sunset_raw) )
 	else --before sunrise
 		carrier_instance:AddRecoveryWindow(first_recovery,sunrise, 3, math.random(1,#carrier_holdingoffset), carrier_turnintowind,25,true)
 		carrier_instance:AddRecoveryWindow(tostring(UTILS.SecondsToClock(sunrise_raw+330, true)),sunset, weather_case_factor(false), nil, carrier_turnintowind,25,true)
 		carrier_instance:AddRecoveryWindow(tostring(UTILS.SecondsToClock(sunset_raw+330, true)),sunrise.."+1", 3, math.random(1,#carrier_holdingoffset), carrier_turnintowind,25,true)
 			
-		timer.scheduleFunction(recovery_scheduler, carrier_instance, (days_passed()*86400)+sunrise_raw)
-	end  --dodać przerwy między oknami 5 min
+		timer.scheduleFunction(recovery_scheduler, carrier_instance,(timer.getTime()+(86400-timer.getAbsTime())+sunrise_raw) )
+	end  
 		
 	detour_ongoing = false
 	

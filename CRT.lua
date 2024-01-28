@@ -302,7 +302,7 @@ function randomMultiplier()
 	return math.random()
 end
 
-function calculateNewHeading(currentHeading)
+--[[function calculateNewHeading(currentHeading)
 	local randomMultiplier = randomMultiplier()
 	currentHeading = currentHeading + (45 or -45 or 60 or -60 or 75 or -75 ) % 360 -- Zastosuj modulo 360 przed mnożeniem
 	local newHeading = currentHeading * randomMultiplier
@@ -314,8 +314,19 @@ function calculateNewHeading(currentHeading)
 		newHeading = newHeading + 180
 	end
 	return newHeading
-end
+end]]
 
+function calculateNewHeading(currentHeading)
+	local heading_offsets = {15,25,30,40,45,50,55,60,70,-15,-25,-30,-40,-45,-50,-55,-60,-70}
+	local newHeading = currentHeading - 180 + math.random(#heading_offsets)
+
+	if currentHeading < 0 then
+		newHeading = 360 - newHeading
+	else
+		newHeading = newHeading
+	end
+	return newHeading
+end
 
 function detour()
 	--remove current waypoint to overwrite it by new detour destination
@@ -330,7 +341,7 @@ function detour()
 	--new position calculation
 	local current_position = GROUP:FindByName("Grupa CVN-71"):GetCoordinate()
 	
-	local current_position_altered= current_position:Translate( UTILS.NMToMeters( 25 ), heding3)
+	local current_position_altered= current_position:Translate( UTILS.NMToMeters( 35 ), heding3)
 	
 	local new_destination = ZONE_RADIUS:New(tostring(timer.getAbsTime()), current_position_altered:GetVec2(), 100, false)
 
@@ -370,7 +381,7 @@ function recovery_scheduler(carrier_instance)
 		carrier_instance:AddRecoveryWindow(sunset,sunrise.."+1", 3, math.random(#carrier_holdingoffset), carrier_turnintowind,25,true)
 			
 		timer.scheduleFunction(recovery_scheduler, carrier_instance, (days_passed()*86400)+sunrise_raw)
-	end
+	end  --dodać przerwy między oknami 5 min
 		
 	detour_ongoing = false
 	
@@ -384,7 +395,7 @@ function recovery_scheduler(carrier_instance)
 	function carrier:OnAfterCollisionWarning(From, Event, To)
 		myAirboss:DeleteAllRecoveryWindows(2)
 		
-		timer.scheduleFunction(detour, nil, timer.getTime()+2)
+		timer.scheduleFunction(detour, nil, timer.getTime()+5)
 		
 		if carrier_detour_arrow ~= nil then
 			trigger.action.removeMark(carrier_detour_arrow)

@@ -293,33 +293,12 @@ function carrier_on()
 	recovery_scheduler(myAirboss)
 end
 
-function randomMultiplier()
-	return math.random()
-end
-
---[[function calculateNewHeading(currentHeading)
-	local randomMultiplier = randomMultiplier()
-	currentHeading = currentHeading + (45 or -45 or 60 or -60 or 75 or -75 ) % 360 -- Zastosuj modulo 360 przed mnożeniem
-	local newHeading = currentHeading * randomMultiplier
-	newHeading = newHeading % 360 -- Zastosuj modulo 360 po mnożeniu
-
-	if newHeading>180 then
-		newHeading = newHeading - 180
-	else
-		newHeading = newHeading + 180
-	end
-	return newHeading
-end]]
-
 function calculateNewHeading(currentHeading)
-	local heading_offsets = {15,25,30,40,45,50,55,60,70,-15,-25,-30,-40,-45,-50,-55,-60,-70}
+	--local heading_offsets = {15,25,30,40,45,50,55,60,70,-15,-25,-30,-40,-45,-50,-55,-60,-70}
+	local heading_offsets = {15,25,-15,-25}
 	local newHeading
 
-	if currentHeading > 180 then
-		newHeading = 360 - (currentHeading+ heading_offsets[math.random(1,#heading_offsets)])
-	else
-		newHeading = currentHeading + (currentHeading+ heading_offsets[math.random(1,#heading_offsets)])
-	end
+	newHeading = currentHeading - 195
 	return newHeading
 end
 
@@ -363,18 +342,21 @@ function recovery_scheduler(carrier_instance)
 	recovery_function_schedule = nil
 	end
 	days = math.floor(timer.getAbsTime() / 86400)
-
+	
 	if current_time > sunrise and current_time < sunset then --after sunrise but before sunset
+	--MESSAGE:New(tostring("CRT - 1"), 300):ToAll()
 		carrier_instance:AddRecoveryWindow(tostring(UTILS.SecondsToClock(  timer.getAbsTime()+330, true).."+"..days+0),tostring( UTILS.SecondsToClock(select(3, IsNight()), true).."+"..days+0), weather_case_factor(false), nil, carrier_turnintowind,25,true)
 		carrier_instance:AddRecoveryWindow(tostring(UTILS.SecondsToClock(select(3, IsNight())+330, true).."+"..days+0),tostring( UTILS.SecondsToClock(select(2, IsNight()), true).."+"..days+1), 3, math.random(1,#carrier_holdingoffset), carrier_turnintowind,25,true)
 		
 		recovery_function_schedule = timer.scheduleFunction(recovery_scheduler, carrier_instance,(timer.getTime()+(86400-timer.getAbsTime())+select(2, IsNight())) )		
 	elseif current_time > sunrise and current_time > sunset then --after sunrise and sunset
+	--MESSAGE:New(tostring("CRT - 2"), 300):ToAll()
 		carrier_instance:AddRecoveryWindow(tostring(UTILS.SecondsToClock(  timer.getAbsTime()+330, true).."+"..days+0),tostring( UTILS.SecondsToClock(select(2, IsNight()), true).."+"..days+1), 3, math.random(1,#carrier_holdingoffset), carrier_turnintowind,25,true)
 		carrier_instance:AddRecoveryWindow(tostring(UTILS.SecondsToClock(select(2, IsNight())+330, true).."+"..days+1),tostring( UTILS.SecondsToClock(select(3, IsNight()), true).."+"..days+1), weather_case_factor(false), nil, carrier_turnintowind,25,true)
 		
 		recovery_function_schedule = timer.scheduleFunction(recovery_scheduler, carrier_instance,(timer.getTime()+(86400-timer.getAbsTime())+select(3, IsNight())) )
 	else --before sunrise
+	--MESSAGE:New(tostring("CRT - 3"), 300):ToAll()
 		carrier_instance:AddRecoveryWindow(tostring(UTILS.SecondsToClock(  timer.getAbsTime()+330, true).."+"..days+0),tostring( UTILS.SecondsToClock(select(2, IsNight()), true).."+"..days+0), 3, math.random(1,#carrier_holdingoffset), carrier_turnintowind,25,true)
 		carrier_instance:AddRecoveryWindow(tostring(UTILS.SecondsToClock(select(2, IsNight())+330, true).."+"..days+0),tostring( UTILS.SecondsToClock(select(3, IsNight()), true).."+"..days+0), weather_case_factor(false), nil, carrier_turnintowind,25,true)
 		carrier_instance:AddRecoveryWindow(tostring(UTILS.SecondsToClock(select(3, IsNight())+330, true).."+"..days+0),tostring( UTILS.SecondsToClock(select(2, IsNight()), true).."+"..days+1), 3, math.random(1,#carrier_holdingoffset), carrier_turnintowind,25,true)

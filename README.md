@@ -1,11 +1,12 @@
 
 
+
 # Welcome to DCS-CRT (Carrier Recovery Tool)
  <br>
 This tool allows for automatic detection of weather conditions, visibility, time of day/night, and based on that, it provides you with two options:<br>
 <br>
 
-**Managment of MOOSE AIRBOSS**, with this tool you can automaticaly set recowery window for any weather conditions (except dynamic weather due to DCS limitations). It also manages things like TACAN, ICLS, Wind Over Deck and other Airboss features see below<br>
+**Managment of MOOSE AIRBOSS**, with this tool you can automaticaly set recowery window for any weather conditions (except dynamic weather due to DCS limitations). **Coastline detection and aviodance.** It also manages things like TACAN, ICLS, Link4, EPLRS, Wind Over Deck and other Airboss/Moose features see below<br>
 
 **Displaying information on which CASE should currently be executed** and the reason for this decision.<br>
 
@@ -20,8 +21,11 @@ You will see what CASE should be executed and reason for that:<br>
 # In game usage with MOOSE Airboss carrier
 Same as standard MOOSE Airbos with additional features:
 - Automatic managment of recovery windows<br>
+![image](https://github.com/Bartek16194/DCS-CRT-Carrier-Recovery-Tool/assets/30091139/2deba06e-66a6-415a-b548-d069e490f13f)
+- Automatic coastline detection and avoidance!
+![image](https://github.com/Bartek16194/DCS-CRT-Carrier-Recovery-Tool/assets/30091139/914c2da3-7ecd-41cd-8f1c-d8a110a63594)
 
-![image](https://github.com/Bartek16194/DCS-CRT-Carrier-Recovery-Tool/assets/30091139/2deba06e-66a6-415a-b548-d069e490f13f)<br>
+<br>
 Landing windows are determined after launching the Airboss; first window begins when script is called, and next windows are added as the current list ends. <br>
 
 If CASE 1/2 conditions are met, it will persist until 30 minutes before sunset. In the case of CASE 3, it will last continuously in adverse weather and during the night until 30 minutes after sunrise, mirroring real-world procedures.
@@ -43,13 +47,26 @@ If you want to use integration with Moose Airboss, you need to set the at least 
 ![image](https://github.com/Bartek16194/DCS-CRT-Carrier-Recovery-Tool/assets/30091139/bf8a98be-2b6a-47ef-b4ab-433da582fe6e)<br><br>
 
 - Below that you can also set most common things like:
-![image](https://github.com/Bartek16194/DCS-CRT-Carrier-Recovery-Tool/assets/30091139/1e190183-6e2e-4967-a127-264ca4c72f4f)
+![image](https://github.com/Bartek16194/DCS-CRT-Carrier-Recovery-Tool/assets/30091139/36a9dff7-80df-4221-af46-6c627469e448)
 
 **Remember if you set `carrier_MOOSE_airboss` to true you need to fill `carrier_unit_name`** 
 
 Change other values or leave them at default. Reffer to [Moose guide](https://flightcontrol-master.github.io/MOOSE_DOCS_DEVELOP/Documentation/Ops.Airboss.html) for more. 
-For more customization see function `carrier_on()`.
+For more customization see function `carrier_on()`
 
+### Mission Editor Setup
+In the mission editor:
+- Carrier must by first unit in group, preferably only one to avoid path crossing during turn.
+- Carrier must not have any waypoints set
+- Speed should be set to the maximum value possible to enter! 
+- You don't need any actions on waypoint zero because the script overrides them. 
+- Carrier should be positioned on the map in such a way that it cannot encounter map boundary while moving into the wind, especially in mission last several days! The collision detection with the coastline doesn't recognize the map boundaries.
+
+Example ME correct setup: 
+(Wind from 030 8kts)
+![image](https://github.com/Bartek16194/DCS-CRT-Carrier-Recovery-Tool/assets/30091139/bdee1503-07bd-46a4-8254-7bb1783a2ac3)
+Example ME incorrect setup: (Map boundary marked by purple) (Carrier will be stuck when he will meet map limit)
+![image](https://github.com/Bartek16194/DCS-CRT-Carrier-Recovery-Tool/assets/30091139/824fa4f9-091e-410c-b3cf-e3ab39410ded)
 
 ## Due to DCS limitations:
 Due to limitations in DCS, specifically the lack of an effective method for dynamically determining visibility range:

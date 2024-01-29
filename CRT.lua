@@ -8,7 +8,7 @@
 		- Displaying information on which CASE should currently be executed and the reason for this decision.
 
 	Contact / Support
-	If you need support or if you like to contribute, jump into my [Discord](https://discord.gg/yYs9HSq).
+	If you need support or if you like to contribute, contact me [Discord] Bartek16194.
 
 	See https://github.com/Bartek16194/DCS-CRT-Carrier-Recovery-Tool for a user manual and the latest release.
 	

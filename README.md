@@ -56,6 +56,7 @@ For more customization see function `carrier_on()`
 
 ### Mission Editor Setup
 In the mission editor:
+- Carrier must by first unit in group, preferably only one to avoid path crossing during turn.
 - Carrier must not have any waypoints set
 - Speed should be set to the maximum value possible to enter! 
 - You don't need any actions on waypoint zero because the script overrides them. 

@@ -267,8 +267,8 @@ function carrier_on()
 	carrier:SetDefaultEPLRS(carrier_EPLRS)
 	
 	local carrier_unit = UNIT:FindByName(carrier_unit_name)
-	if carrier_link4 == true then carrier_unit:CommandActivateLink4(carrier_link4_freq, nil, carrier_morse_code) end
-	if carrier_acls == true then carrier_unit:CommandActivateACLS(carrier_morse_code) end
+	if carrier_link4 == true or carrier_acls == true then carrier_unit:CommandActivateLink4(carrier_link4_freq, nil, carrier_morse_code) end
+	if carrier_acls == true then carrier_unit:CommandActivateACLS() end
 
 	recovery_scheduler(myAirboss)
 end

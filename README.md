@@ -40,7 +40,7 @@ If you want to use integration with Moose Airboss, you need to set at least two 
 ![image](https://github.com/Bartek16194/DCS-CRT-Carrier-Recovery-Tool/assets/30091139/bf8a98be-2b6a-47ef-b4ab-433da582fe6e)<br><br>  
 
 - Below that, you can also set the most common things like:  
-![image](https://github.com/Bartek16194/DCS-CRT-Carrier-Recovery-Tool/assets/30091139/36a9dff7-80df-4221-af46-6c627469e448)<br>  
+![image](https://github.com/user-attachments/assets/d40b9ee4-31a3-4583-b148-9a24ac3af99e)<br>  
 
 **Remember, if you set `carrier_MOOSE_airboss` to true, you need to fill `carrier_unit_name`**. Change other values or leave them at default. Refer to the [Moose guide](https://flightcontrol-master.github.io/MOOSE_DOCS_DEVELOP/Documentation/Ops.Airboss.html) for more. For more customization, see the function `carrier_on()`.<br>  
 
@@ -65,5 +65,5 @@ Due to limitations in DCS, specifically the lack of an effective method for dyna
 - Dynamic weather is not supported, and in such cases, the script will only select CASE 3.<br>  
 
 ## Contact / Support  
-If you need support, contact me on Discord: bartek16194  
+If you need support, contact me on Discord: bartek236  
 See https://github.com/Bartek16194/DCS-CRT-Carrier-Recovery-Tool for a user manual and the latest release.

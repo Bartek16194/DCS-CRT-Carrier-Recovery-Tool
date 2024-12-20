@@ -223,48 +223,65 @@ return precepitation,clouddens
 
 end 
 
+function fog_visibility()
+    local weather = env.mission.weather
+	local visibility = UTILS.MetersToNM(world.weather.getFogVisibilityDistance()) + 10
+	
+	if weather.enable_fog == true then
+		visibility = UTILS.MetersToNM(weather.fog.visibility)
+		return visibility
+	elseif weather.fog2.mode == 2 then
+		visibility = UTILS.MetersToNM(world.weather.getFogVisibilityDistance()) + 10
+		return visibility
+	elseif weather.fog2.manual[1].thickness ~= 0 then
+		visibility = UTILS.MetersToNM(world.weather.getFogVisibilityDistance())
+		return visibility	
+	else
+		return visibility
+	end	
+end
+fog_visibility()
+
+
 function weather_case_factor(show_info)
     local weather = env.mission.weather
     --local visibility = UTILS.Round(weather.visibility.distance / 1852,2) --NM //broken
     local base = weather.clouds.base*3.281
     local CASE = 3
-    local REASON
+    local REASON = "\n"
 	local clouddens = select(2, CloudInfo())
 	local precepitation = select(1, CloudInfo())
-	
-	local fog_visibility = UTILS.Round(weather.fog.visibility / 1852,2) --NM
-	
 	--local dust = weather.dust_density  --//seems no effect at all
 	
     local dynamic_weather = weather.atmosphere_type 
 	
 	if (select(1, IsNight()) == false and dynamic_weather == 0) or (IsNight() == true and show_info == false) then	-- is DAY and not dynamic_weather
-		REASON = "\n-Not night\n-Disabled dynamic_weather\n"
-		if precepitation == 0 or (fog_visibility > 5 and fog_visibility ~=0 ) then --no RAIN/SNOW and no FOG
-			REASON = REASON.."-No rain/snow\n-No fog\n"
+		--REASON = "\n-Not night\n-Disabled dynamic_weather\n"
+		if precepitation == 0 and (fog_visibility() > 5 and fog_visibility() ~=0 ) then --no RAIN/SNOW and no FOG
+			REASON = REASON.."-No rain/snow\n-Visibility >5NM\n"
 			if base > 3000 then 
-				REASON = REASON.."-Clouds base over 3000ft\n"
+				REASON = REASON.."-Clouds base >3000ft\n"
 				CASE = 1 -- BASE +3000FT
 			elseif base < 3000 and base > 1000 then
-				REASON = REASON.."-Clouds base below 3000ft but over 1000ft\n"
+				REASON = REASON.."-Clouds base <3000ft but >1000ft\n"
 				if clouddens > 4 then
-					REASON = REASON.."-Clouds density over 4/10\n"
+					REASON = REASON.."-Clouds density >4/10\n"
 					CASE = 2 -- CLOUDY
 				else
-					REASON = REASON.."-Clouds density below 4/10\n"
+					REASON = REASON.."-Clouds density <4/10\n"
 					CASE = 1 -- NOT SO CLOUDY
 				end
 			else
-				REASON = REASON.."-Clouds base below 1000ft\n"
+				REASON = REASON.."-Clouds base <1000ft\n"
 				CASE = 3 -- BASE -1000FT
 			end
 		else -- RAIN/SNOW or FOG
-			if base > 1000 and (fog_visibility > 5 and fog_visibility ~=0 ) then 
-				REASON = REASON.."-Clouds base above 1000ft\n -No fog\n"
+			if base > 1000 and (fog_visibility() > 5 and fog_visibility() ~=0 ) then 
+				REASON = REASON.."-Clouds base >1000ft\n -Visibility >5NM\n"
 				CASE = 2 -- BASE +1000FT and fog_visibility +5NM
 			else	
+				REASON = REASON.."-Clouds base <1000ft or Visibility <5NM\n"
 				CASE = 3 -- BASE -1000FT or FOG / rain
-				REASON = REASON.."-Clouds base below 1000ft"
 			end
 		end
 	else

@@ -37,6 +37,10 @@ carrier_SetMarshalRadio = 127.500
 carrier_SetLSORadio = 127.500
 carrier_SetDefaultPlayerSkill = AIRBOSS.Difficulty.Easy
 carrier_SetAirbossNiceGuy = true
+carrier_funkman = false
+
+--set to true if in multiplayer
+carrier_MPWireCorrection = false
 
 carrier_holdingoffset = {-30,-15,0,15,30} --only in CASE 3
 
@@ -311,6 +315,8 @@ function carrier_on()
 	myAirboss:SetStaticWeather(env.mission.weather.atmosphere_type)
 	myAirboss:SetSoundfilesFolder("Airboss Soundfiles/")
 	myAirboss:SetMenuSingleCarrier(true)
+	if carrier_funkman == true then myAirboss:SetFunkManOn(10042, "127.0.0.1") end
+	if carrier_MPWireCorrection == true then myAirboss:SetMPWireCorrection(12) end
 	myAirboss:Start()
 	carrier = NAVYGROUP:New(UNIT:FindByName(carrier_unit_name):GetGroup())
 	carrier:SetDefaultEPLRS(carrier_EPLRS)

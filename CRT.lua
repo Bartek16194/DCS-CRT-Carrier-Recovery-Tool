@@ -182,6 +182,38 @@ local precepitation = 0 -- Precepitation: 0=None, 1=Rain, 2=Thunderstorm, 3=Snow
 		else
 			precepitation = 3 -- snow
 		end
+	elseif cloudspreset=="RainyPreset4"then
+		-- Overcast + Rain
+		clouddens = 5
+		if temperature > 5 then
+		  precepitation = 1 -- rain
+		else
+		  precepitation = 3 -- snow
+		end
+	elseif cloudspreset=="RainyPreset5"then
+		-- Overcast + Rain
+		clouddens = 5
+		if temperature > 5 then
+		  precepitation = 1 -- rain
+		else
+		  precepitation = 3 -- snow
+		end
+	elseif cloudspreset=="RainyPreset6"then
+		-- Overcast + Rain
+		clouddens = 5
+		if temperature > 5 then
+		  precepitation = 1 -- rain
+		else
+		  precepitation = 3 -- snow
+		end
+	elseif cloudspreset:find( "NEWRAINPRESET4" ) then
+		-- Overcast + Rain
+		clouddens = 5
+		if temperature > 5 then
+		  precepitation = 1 -- rain
+		else
+		  precepitation = 3 -- snow
+		end
 	else --if weather done by preset "NOTHING"
 		clouddens = clouds.density
 		precepitation = clouds.iprecptns

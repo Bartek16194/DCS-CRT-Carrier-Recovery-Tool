@@ -231,7 +231,7 @@ function fog_visibility()
     local weather = env.mission.weather
 	local visibility = UTILS.MetersToNM(world.weather.getFogVisibilityDistance()) + 10
 	
-	if weather.enable_fog == true then
+	if weather.enable_fog == true or not weather.enable_fog then
 		visibility = UTILS.MetersToNM(weather.fog.visibility)
 		return visibility
 	elseif weather.fog2.mode == 2 then
@@ -244,8 +244,6 @@ function fog_visibility()
 		return visibility
 	end	
 end
-fog_visibility()
-
 
 function weather_case_factor(show_info)
     local weather = env.mission.weather

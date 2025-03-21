@@ -229,21 +229,22 @@ end
 
 function fog_visibility()
     local weather = env.mission.weather
-	local visibility = UTILS.MetersToNM(world.weather.getFogVisibilityDistance()) + 10
-	local variant = 0
-	
-	if weather.enable_fog == true or weather.enable_fog == nil then
-		visibility = UTILS.MetersToNM(weather.fog.visibility)
-		return visibility
-	elseif weather.fog2.mode == 2 then
-		visibility = UTILS.MetersToNM(world.weather.getFogVisibilityDistance()) + 10
-		return visibility
-	elseif weather.fog2.manual[1].thickness ~= 0 then
-		visibility = UTILS.MetersToNM(world.weather.getFogVisibilityDistance())
-		return visibility	
-	else
-		return visibility
-	end	
+    local visibility = UTILS.MetersToNM(world.weather.getFogVisibilityDistance()) + 10
+
+    if weather.enable_fog == true or weather.enable_fog == nil then
+        visibility = UTILS.MetersToNM(weather.fog.visibility)
+        return visibility
+    elseif weather.fog2 ~= nil then
+        if weather.fog2.mode == 2 then
+            visibility = UTILS.MetersToNM(world.weather.getFogVisibilityDistance()) + 10
+            return visibility
+        elseif weather.fog2.manual and weather.fog2.manual[1] and weather.fog2.manual[1].thickness ~= 0 then
+            visibility = UTILS.MetersToNM(world.weather.getFogVisibilityDistance())
+            return visibility
+        end
+    end
+
+    return visibility
 end
 
 function weather_case_factor(show_info)
